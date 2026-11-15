@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Games">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Games</title>
+<style>
+html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#fff;color:#000;}
+body{font-family:-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:rgba(0,0,0,0);}
+button{font-family:inherit;-webkit-appearance:none;border-radius:14px;border:3px solid #000;background:#fff;color:#000;
+  font-weight:bold;cursor:pointer;touch-action:manipulation;margin:0;padding:0;outline:none;}
+button:active{background:#ffd84d;}
+.screen{display:none;position:absolute;top:0;left:0;right:0;bottom:0;}
+.screen.on{display:block;}
+.top{height:72px;border-bottom:3px solid #000;position:relative;background:#f0f0f0;box-sizing:border-box;}
+.top h1{margin:0;line-height:69px;text-align:center;font-size:32px;}
+.back{position:absolute;top:9px;left:10px;height:50px;padding:0 18px;font-size:24px;z-index:2;}
+html[dir=rtl] .back{left:auto;right:10px;}
+.info{position:absolute;top:9px;right:16px;line-height:50px;font-size:24px;font-weight:bold;}
+html[dir=rtl] .info{right:auto;left:16px;}
+.area{position:absolute;top:72px;left:0;right:0;bottom:0;overflow:hidden;}
+.menu{text-align:center;padding:20px 0 30px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.menu h2{font-size:32px;margin:6px 0 16px;}
+.big{display:block;width:84%;max-width:560px;margin:0 auto 16px;height:92px;font-size:34px;padding:0 20px;}
+.big.tall{height:120px;font-size:38px;}
+.big .sub{display:block;font-size:22px;letter-spacing:4px;color:#555;margin-top:2px;}
+.big .ico{font-size:40px;}
+.big.alt{background:#1f4fbf;color:#fff;border-color:#1f4fbf;}
+.big.alt:active{background:#ffd84d;color:#000;}
+.langs{margin-top:22px;}
+.langs button{height:58px;padding:0 20px;font-size:24px;margin:6px;}
+.langs button.cur{background:#000;color:#fff;}
+
+/* Sudoku: black board background = thick box lines, grey box background = thin cell lines */
+#board{position:absolute;background:#000;}
+.box{position:absolute;background:#8c8c8c;}
+.cell{position:absolute;background:#fff;text-align:center;font-weight:bold;color:#0b49b5;overflow:hidden;}
+.cell.given{color:#000;}
+.cell.hint{color:#006b2e;}
+.cell.peer{background:#eaf0f8;}
+.cell.same{background:#a9d4ff;}
+.cell.bad{color:#d00000;background:#ffcccc;}
+.cell.sel{background:#ffd84d;}
+.cell.sel.bad{background:#ffb3a0;}
+.pb{position:absolute;}
+.pb.num{color:#0b49b5;}
+.pb.num.on{background:#a9d4ff;border-width:5px;color:#000;}
+.pb.num.used{color:#bdbdbd;border-color:#cfcfcf;}
+.pb.num.used.on{color:#555;}
+.pb.act{background:#f4f4f4;}
+
+/* Solitaire */
+#solArea{background:#0f6b35;}
+.pc{position:absolute;border:2px solid #000;border-radius:9px;background:#fff;box-sizing:border-box;overflow:hidden;color:#000;}
+.pc.red{color:#d00000;}
+.pc .r{position:absolute;left:5px;top:3px;font-weight:bold;line-height:1;white-space:nowrap;}
+.pc .m{position:absolute;left:0;right:0;bottom:8%;text-align:center;line-height:1;}
+.pc.down{background:#1f4fbf;border-color:#fff;}
+.pc.nope{border-color:#ff2a2a;border-width:5px;}
+.slot{position:absolute;border:3px dashed #9fd3b1;border-radius:9px;box-sizing:border-box;color:#9fd3b1;text-align:center;font-weight:bold;}
+.solbtn{position:absolute;background:#fff;}
+
+/* Pairs */
+.card{position:absolute;border-radius:14px;border:3px solid #000;background:#1f4fbf;padding:0;line-height:1;}
+.card.face{background:#fff;}
+.card.match{background:#d9f5d9;border-color:#167a2a;}
+
+/* Overlays */
+.ov{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.88);z-index:10;}
+.ov.on{display:block;}
+.ovbox{position:absolute;left:50%;top:50%;width:460px;max-width:90%;margin-left:-230px;
+  background:#fff;border:4px solid #000;border-radius:20px;text-align:center;padding:20px 0 24px;}
+#busybox{margin-top:-60px;font-size:34px;font-weight:bold;padding:34px 0;}
+#wintitle{font-size:44px;font-weight:bold;margin:6px 0;}
+#wintext{font-size:26px;margin:0 0 14px;}
+#winbtns button{display:block;width:84%;height:76px;margin:12px auto 0;font-size:28px;}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home" class="screen on">
+  <div class="top"><h1 data-t="title">Games</h1></div>
+  <div class="area menu">
+    <button class="big tall" id="goSudoku"><span class="ico">&#x1F522;</span> <span data-t="sudoku">Sudoku</span></button>
+    <button class="big tall" id="goSol"><span class="ico" style="color:#d00000">&#9829;&#xFE0E;</span><span class="ico">&#9824;&#xFE0E;</span> <span data-t="solitaire">Solitaire</span></button>
+    <button class="big tall" id="goPairs"><span class="ico">&#x1F34E;&#x1F34E;</span> <span data-t="pairs">Pairs</span></button>
+    <div class="langs" id="langs">
+      <button data-lang="ar">العربية</button><button data-lang="fr">Français</button><button data-lang="en">English</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUDOKU MENU -->
+<div id="smenu" class="screen">
+  <div class="top"><button class="back" data-t="back" data-go="home">Back</button><h1 data-t="sudoku">Sudoku</h1></div>
+  <div class="area menu">
+    <button class="big alt" id="cont" data-t="continue">Continue</button>
+    <h2 data-t="chooseLevel">Choose a level</h2>
+    <button class="big" data-level="1"><span data-t="l1"></span><span class="sub">&#9679;&#9675;&#9675;&#9675;&#9675;</span></button>
+    <button class="big" data-level="2"><span data-t="l2"></span><span class="sub">&#9679;&#9679;&#9675;&#9675;&#9675;</span></button>
+    <button class="big" data-level="3"><span data-t="l3"></span><span class="sub">&#9679;&#9679;&#9679;&#9675;&#9675;</span></button>
+    <button class="big" data-level="4"><span data-t="l4"></span><span class="sub">&#9679;&#9679;&#9679;&#9679;&#9675;</span></button>
+    <button class="big" data-level="5"><span data-t="l5"></span><span class="sub">&#9679;&#9679;&#9679;&#9679;&#9679;</span></button>
+  </div>
+</div>
+
+<!-- SUDOKU GAME -->
+<div id="sgame" class="screen">
+  <div class="top"><button class="back" data-t="back" data-go="smenu">Back</button><h1 id="lvlName"></h1></div>
+  <div class="area" id="sArea" dir="ltr"></div>
+</div>
+
+<!-- SOLITAIRE -->
+<div id="sol" class="screen">
+  <div class="top"><button class="back" data-t="back" data-go="home">Back</button><h1 data-t="solitaire">Solitaire</h1></div>
+  <div class="area" id="solArea" dir="ltr"></div>
+</div>
+
+<!-- PAIRS MENU -->
+<div id="pmenu" class="screen">
+  <div class="top"><button class="back" data-t="back" data-go="home">Back</button><h1 data-t="pairs">Pairs</h1></div>
+  <div class="area menu">
+    <h2 data-t="howMany">How many cards?</h2>
+    <button class="big" data-cards="12"></button>
+    <button class="big" data-cards="16"></button>
+    <button class="big" data-cards="20"></button>
+  </div>
+</div>
+
+<!-- PAIRS GAME -->
+<div id="pgame" class="screen">
+  <div class="top"><button class="back" data-t="back" data-go="pmenu">Back</button><h1 data-t="pairs">Pairs</h1><div class="info" id="pMoves"></div></div>
+  <div class="area" id="pArea" dir="ltr"></div>
+</div>
+
+<div id="win" class="ov"><div class="ovbox" id="winbox">
+  <div id="wintitle"></div><div id="wintext"></div><div id="winbtns"></div>
+</div></div>
+<div id="busy" class="ov"><div class="ovbox" id="busybox">&#8230;</div></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================= Text ================= */
+  var T = {
+    en: { title: "Games", sudoku: "Sudoku", solitaire: "Solitaire", pairs: "Pairs", back: "← Back",
+      "continue": "Continue my game", chooseLevel: "Choose a level",
+      l1: "Very easy", l2: "Easy", l3: "Medium", l4: "Hard", l5: "Very hard",
+      undo: "Undo", erase: "Erase", hint: "Help", newg: "New", yes: "Yes", no: "No",
+      newConfirm: "Start a new game?", wellDone: "Well done!", solved: "Puzzle solved.", solWon: "All cards are home.",
+      next: "Next level", again: "Play again", menu: "Menu",
+      howMany: "How many cards?", cards: "cards", moves: "Moves", allPairs: "All pairs found!" },
+    fr: { title: "Jeux", sudoku: "Sudoku", solitaire: "Solitaire", pairs: "Paires", back: "← Retour",
+      "continue": "Continuer ma partie", chooseLevel: "Choisissez un niveau",
+      l1: "Très facile", l2: "Facile", l3: "Moyen", l4: "Difficile", l5: "Très difficile",
+      undo: "Annuler", erase: "Effacer", hint: "Aide", newg: "Nouveau", yes: "Oui", no: "Non",
+      newConfirm: "Commencer une nouvelle partie ?", wellDone: "Bravo !", solved: "Grille terminée.", solWon: "Toutes les cartes sont rangées.",
+      next: "Niveau suivant", again: "Rejouer", menu: "Menu",
+      howMany: "Combien de cartes ?", cards: "cartes", moves: "Coups", allPairs: "Toutes les paires trouvées !" },
+    ar: { title: "ألعاب", sudoku: "سودوكو", solitaire: "سوليتير", pairs: "الأزواج", back: "رجوع →",
+      "continue": "متابعة اللعبة", chooseLevel: "اختر المستوى",
+      l1: "سهل جدا", l2: "سهل", l3: "متوسط", l4: "صعب", l5: "صعب جدا",
+      undo: "تراجع", erase: "مسح", hint: "مساعدة", newg: "جديد", yes: "نعم", no: "لا",
+      newConfirm: "بدء لعبة جديدة؟", wellDone: "أحسنت!", solved: "اكتملت الشبكة.", solWon: "رتبت كل الأوراق.",
+      next: "المستوى التالي", again: "العب مرة أخرى", menu: "القائمة",
+      howMany: "كم عدد البطاقات؟", cards: "بطاقة", moves: "المحاولات", allPairs: "وجدت كل الأزواج!" }
+  };
+  var lang = "en";
+  function t(k) { return (T[lang] && T[lang][k]) || T.en[k] || k; }
+
+  /* ================= Helpers ================= */
+  function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function load(k) { try { var s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+  function $(id) { return document.getElementById(id); }
+  function each(list, fn) { for (var i = 0; i < list.length; i++) fn(list[i], i); }
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var x = a[i]; a[i] = a[j]; a[j] = x; }
+    return a;
+  }
+  function range(n) { var a = []; for (var i = 0; i < n; i++) a.push(i); return a; }
+  function zeros(n) { var a = []; for (var i = 0; i < n; i++) a.push(0); return a; }
+  function tap(el, fn) { el.addEventListener("click", fn, false); }
+  function place(el, x, y, w, h, fs) {
+    var s = el.style;
+    s.left = Math.round(x) + "px"; s.top = Math.round(y) + "px";
+    s.width = Math.round(w) + "px"; s.height = Math.round(h) + "px";
+    if (fs) s.fontSize = Math.round(fs) + "px";
+  }
+  function areaSize(id) {
+    var a = $(id);
+    return { W: a.clientWidth || window.innerWidth, H: a.clientHeight || (window.innerHeight - 72) };
+  }
+
+  /* ================= Screens & overlays ================= */
+  var current = "home";
+  function show(id) {
+    each(document.querySelectorAll(".screen"), function (el) { el.className = "screen" + (el.id === id ? " on" : ""); });
+    current = id;
+    if (id === "smenu") $("cont").style.display = (S && !S.done) ? "block" : "none";
+    relayout();
+  }
+  function relayout() {
+    if (current === "sgame") { sLayout(); sRender(); }
+    if (current === "sol") solRender();
+    if (current === "pgame") { pLayout(); pRender(); }
+  }
+  each(document.querySelectorAll("[data-go]"), function (el) {
+    tap(el, function () { show(el.getAttribute("data-go")); });
+  });
+
+  // Dialog with a title, a line of text and big buttons: btns = [[label, fn], ...]
+  function dialog(title, text, btns) {
+    $("wintitle").textContent = title;
+    $("wintext").textContent = text;
+    var box = $("winbtns");
+    while (box.firstChild) box.removeChild(box.firstChild);
+    each(btns, function (b) {
+      var el = document.createElement("button"); el.textContent = b[0];
+      tap(el, function () { $("win").className = "ov"; if (b[1]) b[1](); });
+      box.appendChild(el);
+    });
+    $("winbox").style.marginTop = -(100 + btns.length * 45 + (text ? 20 : 0)) + "px";
+    $("win").className = "ov on";
+  }
+
+  function setLang(l) {
+    if (!T[l]) l = "en";
+    lang = l; store("dp_lang", l);
+    document.documentElement.lang = l;
+    document.documentElement.dir = (l === "ar") ? "rtl" : "ltr";
+    document.title = t("title");
+    each(document.querySelectorAll("[data-t]"), function (el) { el.textContent = t(el.getAttribute("data-t")); });
+    each(document.querySelectorAll("[data-cards]"), function (el) { el.textContent = el.getAttribute("data-cards") + " " + t("cards"); });
+    each(document.querySelectorAll("#langs button"), function (el) {
+      el.className = el.getAttribute("data-lang") === l ? "cur" : "";
+    });
+    sLabels(); pInfo();
+  }
+
+  /* =====================================================================
+     SUDOKU
+     ===================================================================== */
+  var BOX = [];
+  for (var bi = 0; bi < 81; bi++) BOX.push(Math.floor(Math.floor(bi / 9) / 3) * 3 + Math.floor((bi % 9) / 3));
+  function bits(m) { var n = 0; while (m) { m &= m - 1; n++; } return n; }
+
+  // Backtracking solver with bitmasks. Returns {count, sol}; stops at `limit` solutions.
+  function solve(grid, limit, randomize) {
+    var a = grid.slice(), rows = zeros(9), cols = zeros(9), boxes = zeros(9), i, b;
+    for (i = 0; i < 81; i++) {
+      if (a[i]) {
+        b = 1 << a[i];
+        var r = Math.floor(i / 9), c = i % 9;
+        if ((rows[r] & b) || (cols[c] & b) || (boxes[BOX[i]] & b)) return { count: 0, sol: null };
+        rows[r] |= b; cols[c] |= b; boxes[BOX[i]] |= b;
+      }
+    }
+    var count = 0, sol = null;
+    function rec() {
+      var best = -1, bestMask = 0, bestN = 10;
+      for (var k = 0; k < 81; k++) {
+        if (a[k]) continue;
+        var m = ~(rows[Math.floor(k / 9)] | cols[k % 9] | boxes[BOX[k]]) & 1022;
+        var n = bits(m);
+        if (n < bestN) { bestN = n; best = k; bestMask = m; if (n <= 1) break; }
+      }
+      if (best < 0) { count++; if (!sol) sol = a.slice(); return; }
+      if (bestN === 0) return;
+      var digits = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+      if (randomize) shuffle(digits);
+      var r2 = Math.floor(best / 9), c2 = best % 9, bx = BOX[best];
+      for (var d = 0; d < 9; d++) {
+        var bb = 1 << digits[d];
+        if (!(bestMask & bb)) continue;
+        a[best] = digits[d]; rows[r2] |= bb; cols[c2] |= bb; boxes[bx] |= bb;
+        rec();
+        a[best] = 0; rows[r2] &= ~bb; cols[c2] &= ~bb; boxes[bx] &= ~bb;
+        if (count >= limit) return;
+      }
+    }
+    rec();
+    return { count: count, sol: sol };
+  }
+
+  // Numbers shown at the start, per level (1 = very easy ... 5 = very hard). Every puzzle has exactly one solution.
+  var CLUES = { 1: 52, 2: 44, 3: 37, 4: 31, 5: 26 };
+  function generateOnce(level) {
+    var full = solve(zeros(81), 1, true).sol;
+    var p = full.slice(), order = shuffle(range(81)), clues = 81, target = CLUES[level];
+    for (var k = 0; k < 81 && clues > target; k++) {
+      var i = order[k], v = p[i];
+      p[i] = 0;
+      if (solve(p, 2, false).count !== 1) p[i] = v; else clues--;
+    }
+    return { p: p, s: full, clues: clues };
+  }
+  function generate(level) {
+    var best = generateOnce(level), tries = 1;
+    while (best.clues > CLUES[level] && tries < 4) {
+      var g = generateOnce(level); tries++;
+      if (g.clues < best.clues) best = g;
+    }
+    return best;
+  }
+
+  // p: givens, s: solution, v: current values, h: hinted cells, lvl, sel, hl (highlighted digit), u: undo list
+  var S = load("dp_sudoku2");
+  if (S && !(S.p && S.p.length === 81 && S.v && S.s && S.u)) S = null;
+  function sSave() { store("dp_sudoku2", S); }
+
+  var cells = [], sboxes = [], nums = [], acts = {};
+  (function build() {
+    var area = $("sArea"), board = document.createElement("div");
+    board.id = "board"; area.appendChild(board);
+    for (var b = 0; b < 9; b++) { var bx = document.createElement("div"); bx.className = "box"; board.appendChild(bx); sboxes.push(bx); }
+    for (var i = 0; i < 81; i++) {
+      var c = document.createElement("div"); c.className = "cell";
+      (function (idx) { tap(c, function () { cellTap(idx); }); })(i);
+      sboxes[BOX[i]].appendChild(c); cells.push(c);
+    }
+    for (var d = 1; d <= 9; d++) {
+      var nb = document.createElement("button"); nb.className = "pb num"; nb.textContent = d;
+      (function (dd) { tap(nb, function () { numTap(dd); }); })(d);
+      area.appendChild(nb); nums.push(nb);
+    }
+    var names = ["undo", "erase", "hint"];
+    for (var a = 0; a < names.length; a++) {
+      var ab = document.createElement("button"); ab.className = "pb act";
+      area.appendChild(ab); acts[names[a]] = ab;
+    }
+    tap(acts.undo, sUndo); tap(acts.erase, sErase); tap(acts.hint, sHint);
+  })();
+
+  function sLabels() {
+    acts.undo.textContent = t("undo");
+    acts.erase.textContent = t("erase");
+    acts.hint.textContent = t("hint");
+    $("lvlName").textContent = S ? t("l" + S.lvl) : t("sudoku");
+  }
+
+  function sLayout() {
+    var sz = areaSize("sArea"), W = sz.W, H = sz.H;
+    var g = 12, actH = 80, land = W > H * 1.1;
+    var bw, gp = W > 600 ? 10 : 5, i, x0, y0;
+    if (!land) bw = Math.min(W - 2 * g, (H - actH - 4 * g + 1.15 * 8 * gp / 9) / (1 + 1.15 / 9));
+    else bw = Math.min(H - 2 * g, W - 3 * g - 2 * gp - 3 * 105);
+
+    var B = bw > 500 ? 6 : 4, tl = 2;                 // thick and thin line widths
+    var c = Math.floor((bw - 4 * B - 6 * tl) / 9);
+    bw = 9 * c + 4 * B + 6 * tl;
+    var boxW = 3 * c + 2 * tl;
+
+    if (!land) {
+      var nw = (bw - 8 * gp) / 9, nh = Math.round(nw * 1.15);
+      var total = bw + g + nh + g + actH;
+      x0 = (W - bw) / 2; y0 = Math.max(g, (H - total) / 2);
+      for (i = 0; i < 9; i++) place(nums[i], x0 + i * (nw + gp), y0 + bw + g, nw, nh, Math.min(nw, nh) * 0.72);
+      var aw = (bw - 2 * g) / 3, ay = y0 + bw + g + nh + g, afs = Math.min(30, aw / 5);
+      place(acts.undo, x0, ay, aw, actH, afs);
+      place(acts.erase, x0 + aw + g, ay, aw, actH, afs);
+      place(acts.hint, x0 + 2 * (aw + g), ay, aw, actH, afs);
+    } else {
+      var space = W - bw - 3 * g;
+      var s = Math.floor(Math.min((space - 2 * gp) / 3, (H - 2 * g - actH - g - 2 * gp) / 3));
+      var pw = 3 * s + 2 * gp, ph = 3 * s + 2 * gp + g + actH;
+      x0 = (W - (bw + 2 * g + pw)) / 2; y0 = (H - bw) / 2;
+      var px = x0 + bw + 2 * g, py = (H - ph) / 2;
+      for (i = 0; i < 9; i++) place(nums[i], px + (i % 3) * (s + gp), py + Math.floor(i / 3) * (s + gp), s, s, s * 0.6);
+      var aw2 = (pw - 2 * gp) / 3, ay2 = py + 3 * s + 2 * gp + g, afs2 = Math.min(28, aw2 / 4.6);
+      place(acts.undo, px, ay2, aw2, actH, afs2);
+      place(acts.erase, px + aw2 + gp, ay2, aw2, actH, afs2);
+      place(acts.hint, px + 2 * (aw2 + gp), ay2, aw2, actH, afs2);
+    }
+    place($("board"), x0, y0, bw, bw);
+    for (var b = 0; b < 9; b++) place(sboxes[b], B + (b % 3) * (boxW + B), B + Math.floor(b / 3) * (boxW + B), boxW, boxW);
+    var fs = Math.round(c * 0.7) + "px", lh = c + "px";
+    for (i = 0; i < 81; i++) {
+      var r = Math.floor(i / 9) % 3, col = i % 3;
+      place(cells[i], col * (c + tl), r * (c + tl), c, c);
+      cells[i].style.fontSize = fs; cells[i].style.lineHeight = lh;
+    }
+  }
+
+  function sRender() {
+    if (!S) return;
+    var sel = S.sel, hl = S.hl, counts = zeros(10);
+    var sr = Math.floor(sel / 9), sc = sel % 9;
+    for (var i = 0; i < 81; i++) {
+      var v = S.v[i], cls = "cell";
+      if (S.p[i]) cls += " given"; else if (S.h[i]) cls += " hint";
+      if (hl && v === hl) cls += " same";
+      else if (sel >= 0 && (Math.floor(i / 9) === sr || i % 9 === sc || BOX[i] === BOX[sel])) cls += " peer";
+      if (v && v !== S.s[i]) cls += " bad";
+      if (i === sel) cls += " sel";
+      cells[i].className = cls;
+      cells[i].textContent = v ? v : "";
+      if (v && v === S.s[i]) counts[v]++;
+    }
+    for (var d = 1; d <= 9; d++) nums[d - 1].className = "pb num" + (counts[d] >= 9 ? " used" : "") + (hl === d ? " on" : "");
+  }
+
+  function locked(i) { return !!(S.p[i] || S.h[i]); }
+  function setCell(i, val) {
+    if (S.v[i] === val) return;
+    S.u.push([i, S.v[i]]);
+    if (S.u.length > 200) S.u.shift();
+    S.v[i] = val;
+  }
+  function cellTap(i) {
+    if (!S) return;
+    S.sel = i;
+    if (S.v[i]) S.hl = S.v[i];             // tapping a number in the grid highlights the same numbers
+    sSave(); sRender();
+  }
+  // Pressing a number highlights it everywhere, and fills the chosen square if that square
+  // is empty or wrong. A correct square is never overwritten, so pressing numbers just to look is safe.
+  function numTap(d) {
+    if (!S) return;
+    S.hl = d;
+    var i = S.sel;
+    if (!S.done && i >= 0 && !locked(i) && S.v[i] !== S.s[i]) setCell(i, d);
+    sSave(); sRender(); sCheck();
+  }
+  function sErase() {
+    if (!S || S.done || S.sel < 0 || locked(S.sel)) return;
+    setCell(S.sel, 0); sSave(); sRender();
+  }
+  function sUndo() {
+    if (!S || S.done || !S.u.length) return;
+    var m = S.u.pop();
+    if (locked(m[0])) return;
+    S.v[m[0]] = m[1]; S.sel = m[0];
+    sSave(); sRender();
+  }
+  function sHint() {
+    if (!S || S.done) return;
+    var target = -1;
+    if (S.sel >= 0 && !locked(S.sel) && S.v[S.sel] !== S.s[S.sel]) target = S.sel;
+    else for (var i = 0; i < 81; i++) if (S.v[i] !== S.s[i]) { target = i; break; }
+    if (target < 0) return;
+    S.v[target] = S.s[target]; S.h[target] = 1; S.sel = target; S.hl = S.s[target];
+    sSave(); sRender(); sCheck();
+  }
+  function sCheck() {
+    for (var i = 0; i < 81; i++) if (S.v[i] !== S.s[i]) return;
+    S.done = true; S.sel = -1; sSave(); sRender();
+    setTimeout(function () {
+      var btns = [];
+      if (S.lvl < 5) btns.push([t("next") + " → " + t("l" + (S.lvl + 1)), function () { sNew(S.lvl + 1); }]);
+      btns.push([t("again"), function () { sNew(S.lvl); }]);
+      btns.push([t("menu"), function () { show("smenu"); }]);
+      dialog(t("wellDone"), t("solved"), btns);
+    }, 500);
+  }
+  function sNew(level) {
+    $("busy").className = "ov on";
+    setTimeout(function () {
+      var g = generate(level);
+      S = { p: g.p, s: g.s, v: g.p.slice(), h: zeros(81), lvl: level, sel: -1, hl: 0, u: [], done: false };
+      sSave(); sLabels();
+      $("busy").className = "ov";
+      show("sgame");
+    }, 50);
+  }
+  each(document.querySelectorAll("[data-level]"), function (el) {
+    tap(el, function () { sNew(parseInt(el.getAttribute("data-level"), 10)); });
+  });
+  tap($("cont"), function () { sLabels(); show("sgame"); });
+
+  /* =====================================================================
+     SOLITAIRE (Klondike, draw one). Tap a card and it moves to the best place by itself.
+     ===================================================================== */
+  var SUIT = ["♠︎", "♥︎", "♦︎", "♣︎"];
+  var RANK = {
+    en: ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"],
+    fr: ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "V", "D", "R"]
+  };
+  function rk(c) { return c % 13 + 1; }
+  function su(c) { return Math.floor(c / 13); }
+  function red(c) { var s = su(c); return s === 1 || s === 2; }
+  function rkLabel(c) { return (RANK[lang] || RANK.en)[rk(c) - 1]; }
+
+  var G = load("dp_sol");          // {stock, waste, found[4], tab[7]{d,u}, u: undo snapshots}
+  if (G && !(G.tab && G.tab.length === 7)) G = null;
+  var auto = null, nope = null;
+
+  function solDeal() {
+    var deck = shuffle(range(52)), tab = [];
+    for (var i = 0; i < 7; i++) {
+      var d = [];
+      for (var k = 0; k < i; k++) d.push(deck.pop());
+      tab.push({ d: d, u: [deck.pop()] });
+    }
+    G = { stock: deck, waste: [], found: [[], [], [], []], tab: tab, u: [], won: false };
+    store("dp_sol", G);
+  }
+  function snap() {
+    G.u.push(JSON.stringify({ stock: G.stock, waste: G.waste, found: G.found, tab: G.tab }));
+    if (G.u.length > 150) G.u.shift();
+  }
+  function canFound(c) { return G.found[su(c)].length === rk(c) - 1; }
+  function canTab(c, col) {
+    var tb = G.tab[col];
+    if (!tb.u.length) return !tb.d.length && rk(c) === 13;
+    var top = tb.u[tb.u.length - 1];
+    return red(top) !== red(c) && rk(top) === rk(c) + 1;
+  }
+  function flipTops() {
+    for (var i = 0; i < 7; i++) if (!G.tab[i].u.length && G.tab[i].d.length) G.tab[i].u.push(G.tab[i].d.pop());
+  }
+  // Find a tableau column for card c (non-empty columns first). `from` = column it comes from, or -1.
+  function findTab(c, from, wholeColumn) {
+    var i;
+    for (i = 0; i < 7; i++) if (i !== from && G.tab[i].u.length && canTab(c, i)) return i;
+    if (wholeColumn) return -1;   // moving a king that already sits on an empty spot gains nothing
+    for (i = 0; i < 7; i++) if (i !== from && canTab(c, i)) return i;
+    return -1;
+  }
+  function after() {
+    flipTops(); store("dp_sol", G); solRender();
+  }
+  function bump(key) { nope = key; solRender(); setTimeout(function () { nope = null; solRender(); }, 450); }
+
+  function tapStock() {
+    if (G.won) return;
+    snap();
+    if (G.stock.length) G.waste.push(G.stock.pop());
+    else if (G.waste.length) { G.stock = G.waste.reverse(); G.waste = []; }
+    else { G.u.pop(); return; }
+    after();
+  }
+  function tapWaste() {
+    if (G.won || !G.waste.length) return;
+    var c = G.waste[G.waste.length - 1], col;
+    if (canFound(c)) { snap(); G.found[su(c)].push(G.waste.pop()); return after(); }
+    col = findTab(c, -1, false);
+    if (col >= 0) { snap(); G.tab[col].u.push(G.waste.pop()); return after(); }
+    bump("w");
+  }
+  function tapTab(col, idx) {
+    if (G.won) return;
+    var tb = G.tab[col], c = tb.u[idx], last = idx === tb.u.length - 1;
+    if (last && canFound(c)) { snap(); G.found[su(c)].push(tb.u.pop()); return after(); }
+    var dest = findTab(c, col, idx === 0 && !tb.d.length);
+    if (dest >= 0) {
+      snap();
+      var seq = tb.u.splice(idx, tb.u.length - idx);
+      G.tab[dest].u = G.tab[dest].u.concat(seq);
+      return after();
+    }
+    bump("t" + col + "_" + idx);
+  }
+  function tapFound(s) {
+    if (G.won || !G.found[s].length) return;
+    var c = G.found[s][G.found[s].length - 1], dest = findTab(c, -1, false);
+    if (dest >= 0 && G.tab[dest].u.length) { snap(); G.tab[dest].u.push(G.found[s].pop()); return after(); }
+    bump("f" + s);
+  }
+  function solUndo() {
+    if (!G || G.won || !G.u.length) return;
+    var s = JSON.parse(G.u.pop());
+    G.stock = s.stock; G.waste = s.waste; G.found = s.found; G.tab = s.tab;
+    store("dp_sol", G); solRender();
+  }
+  function solNew() {
+    dialog(t("newConfirm"), "", [[t("yes"), function () { stopAuto(); solDeal(); solRender(); }], [t("no"), null]]);
+  }
+  function stopAuto() { if (auto) { clearInterval(auto); auto = null; } }
+  function solCheck() {
+    if (G.won) return;
+    var n = 0, i;
+    for (i = 0; i < 4; i++) n += G.found[i].length;
+    if (n === 52) {
+      stopAuto(); G.won = true; store("dp_sol", G);
+      setTimeout(function () {
+        dialog(t("wellDone"), t("solWon"), [[t("again"), function () { solDeal(); solRender(); }], [t("menu"), function () { show("home"); }]]);
+      }, 400);
+      return;
+    }
+    // Everything turned face up and nothing left to draw: finish automatically.
+    if (auto || G.stock.length || G.waste.length) return;
+    for (i = 0; i < 7; i++) if (G.tab[i].d.length) return;
+    auto = setInterval(function () {
+      for (var k = 0; k < 7; k++) {
+        var u = G.tab[k].u;
+        if (u.length && canFound(u[u.length - 1])) { G.found[su(u[u.length - 1])].push(u.pop()); store("dp_sol", G); solRender(); return; }
+      }
+      stopAuto();
+    }, 180);
+  }
+
+  function solRender() {
+    if (!G) solDeal();
+    var area = $("solArea");
+    while (area.firstChild) area.removeChild(area.firstChild);
+    var sz = areaSize("solArea"), W = sz.W, H = sz.H;
+    var gp = W > 600 ? 10 : 5;
+    var cw = Math.floor((W - 8 * gp) / 7), ch = Math.round(cw * 1.4);
+    var maxCh = Math.floor((H - 4 * gp) / 2.6);
+    if (ch > maxCh) { ch = maxCh; cw = Math.round(ch / 1.4); }
+    var x0 = (W - (7 * cw + 6 * gp)) / 2;
+    function X(i) { return x0 + i * (cw + gp); }
+    var topY = gp, tabY = topY + ch + 2 * gp, bottom = H - gp;
+    var rfs = Math.round(cw * 0.3), mfs = Math.round(cw * 0.55);
+
+    function card(c, x, y, up, key, fn) {
+      var el = document.createElement("div");
+      el.className = "pc" + (up ? (red(c) ? " red" : "") : " down") + (key && key === nope ? " nope" : "");
+      place(el, x, y, cw, ch);
+      if (up) {
+        var r = document.createElement("span"); r.className = "r"; r.style.fontSize = rfs + "px";
+        r.textContent = rkLabel(c) + SUIT[su(c)];
+        var m = document.createElement("span"); m.className = "m"; m.style.fontSize = mfs + "px";
+        m.textContent = SUIT[su(c)];
+        el.appendChild(r); el.appendChild(m);
+      }
+      if (fn) tap(el, fn);
+      area.appendChild(el);
+      return el;
+    }
+    function slot(x, y, label, fn) {
+      var el = document.createElement("div"); el.className = "slot";
+      place(el, x, y, cw, ch, cw * 0.5);
+      el.style.lineHeight = (ch - 6) + "px"; el.textContent = label || "";
+      if (fn) tap(el, fn);
+      area.appendChild(el);
+    }
+
+    // Stock (tap to draw a card, or to turn the pile over when empty)
+    if (G.stock.length) card(0, X(0), topY, false, null, tapStock);
+    else slot(X(0), topY, G.waste.length ? "↻" : "", tapStock);
+    // Waste
+    if (G.waste.length) card(G.waste[G.waste.length - 1], X(1), topY, true, "w", tapWaste);
+    else slot(X(1), topY, "");
+    // Undo / New in the free spot of the top row
+    var bh = (ch - gp) / 2, bfs = Math.min(26, cw / 4.4);
+    var ub = document.createElement("button"); ub.className = "solbtn"; ub.textContent = t("undo");
+    place(ub, X(2), topY, cw, bh, bfs); tap(ub, solUndo); area.appendChild(ub);
+    var nb = document.createElement("button"); nb.className = "solbtn"; nb.textContent = t("newg");
+    place(nb, X(2), topY + bh + gp, cw, bh, bfs); tap(nb, solNew); area.appendChild(nb);
+    // Foundations
+    for (var s = 0; s < 4; s++) {
+      var f = G.found[s];
+      (function (ss) {
+        if (f.length) card(f[f.length - 1], X(3 + ss), topY, true, "f" + ss, function () { tapFound(ss); });
+        else slot(X(3 + ss), topY, SUIT[ss]);
+      })(s);
+    }
+    // Tableau
+    for (var col = 0; col < 7; col++) {
+      var tb = G.tab[col], nd = tb.d.length, nu = tb.u.length;
+      var downOff = Math.round(ch * 0.13), upOff = Math.round(ch * 0.3);
+      var avail = bottom - tabY;
+      if (nu > 1 && ch + nd * downOff + (nu - 1) * upOff > avail) {
+        upOff = Math.max(10, Math.floor((avail - ch - nd * downOff) / (nu - 1)));
+      }
+      if (!nd && !nu) { slot(X(col), tabY, ""); continue; }
+      var y = tabY;
+      for (var k = 0; k < nd; k++) { card(0, X(col), y, false, null, null); y += downOff; }
+      for (var j = 0; j < nu; j++) {
+        (function (cc, jj) { card(tb.u[jj], X(cc), y, true, "t" + cc + "_" + jj, function () { tapTab(cc, jj); }); })(col, j);
+        y += upOff;
+      }
+    }
+    solCheck();
+  }
+
+  /* =====================================================================
+     PAIRS (memory)
+     ===================================================================== */
+  // Older emoji only (Unicode 6.0) so they show on old iPads.
+  var SYMBOLS = ["🍎", "🐟", "⭐", "🌙", "☀️", "🚗", "🏠",
+    "🌳", "🐱", "🐶", "⚽", "🎈", "🍌", "🍇", "🐢", "🔑"];
+  var P = null, pCards = [];
+  function pInfo() { if (P) $("pMoves").textContent = t("moves") + ": " + P.moves; }
+  function pNew(n) {
+    var syms = shuffle(SYMBOLS.slice()).slice(0, n / 2);
+    P = { n: n, deck: shuffle(syms.concat(syms)), up: zeros(n), done: zeros(n), first: -1, lock: false, moves: 0 };
+    var area = $("pArea");
+    while (area.firstChild) area.removeChild(area.firstChild);
+    pCards = [];
+    for (var i = 0; i < n; i++) {
+      var b = document.createElement("button"); b.className = "card";
+      (function (idx) { tap(b, function () { pTap(idx); }); })(i);
+      area.appendChild(b); pCards.push(b);
+    }
+    pInfo(); show("pgame");
+  }
+  function pLayout() {
+    if (!P) return;
+    var sz = areaSize("pArea"), W = sz.W, H = sz.H;
+    var land = W > H, cols, rows, g = 12;
+    if (P.n === 12) { cols = land ? 4 : 3; rows = land ? 3 : 4; }
+    else if (P.n === 16) { cols = 4; rows = 4; }
+    else { cols = land ? 5 : 4; rows = land ? 4 : 5; }
+    var s = Math.floor(Math.min((W - (cols + 1) * g) / cols, (H - (rows + 1) * g) / rows));
+    var x0 = (W - (cols * s + (cols - 1) * g)) / 2, y0 = (H - (rows * s + (rows - 1) * g)) / 2;
+    for (var i = 0; i < P.n; i++) place(pCards[i], x0 + (i % cols) * (s + g), y0 + Math.floor(i / cols) * (s + g), s, s, s * 0.58);
+  }
+  function pRender() {
+    if (!P) return;
+    for (var i = 0; i < P.n; i++) {
+      var shown = P.up[i] || P.done[i];
+      pCards[i].className = "card" + (shown ? " face" : "") + (P.done[i] ? " match" : "");
+      pCards[i].textContent = shown ? P.deck[i] : "";
+    }
+  }
+  function pTap(i) {
+    if (!P || P.lock || P.up[i] || P.done[i]) return;
+    P.up[i] = 1;
+    if (P.first < 0) { P.first = i; pRender(); return; }
+    var a = P.first; P.first = -1; P.moves++; pInfo();
+    if (P.deck[a] === P.deck[i]) {
+      P.done[a] = P.done[i] = 1; P.up[a] = P.up[i] = 0; pRender();
+      for (var k = 0; k < P.n; k++) if (!P.done[k]) return;
+      setTimeout(function () {
+        dialog(t("wellDone"), t("allPairs") + " " + t("moves") + ": " + P.moves,
+          [[t("again"), function () { pNew(P.n); }], [t("menu"), function () { show("pmenu"); }]]);
+      }, 500);
+    } else {
+      P.lock = true; pRender();
+      setTimeout(function () { P.up[a] = P.up[i] = 0; P.lock = false; pRender(); }, 1500);
+    }
+  }
+  each(document.querySelectorAll("[data-cards]"), function (el) {
+    tap(el, function () { pNew(parseInt(el.getAttribute("data-cards"), 10)); });
+  });
+
+  /* ================= Start ================= */
+  tap($("goSudoku"), function () { show("smenu"); });
+  tap($("goSol"), function () { if (G && G.won) solDeal(); show("sol"); });
+  tap($("goPairs"), function () { show("pmenu"); });
+  each(document.querySelectorAll("#langs button"), function (el) {
+    tap(el, function () { setLang(el.getAttribute("data-lang")); });
+  });
+
+  var nav = (navigator.language || "en").slice(0, 2).toLowerCase();
+  setLang(load("dp_lang") || (T[nav] ? nav : "en"));
+  show("home");
+
+  var rt = null;
+  window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(relayout, 150); }, false);
+  window.addEventListener("orientationchange", function () { setTimeout(relayout, 300); }, false);
+})();
+</script>
+</body>
+</html>
