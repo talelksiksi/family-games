@@ -919,6 +919,13 @@ html[dir=rtl] #wintext td.v{text-align:left;}
   setLang(load("dp_lang") || (T[nav] ? nav : "en"));
   show("home");
 
+  // Save the games on the device so they also work without internet.
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    window.addEventListener("load", function () {
+      try { navigator.serviceWorker.register("sw.js").catch(function () {}); } catch (e) {}
+    }, false);
+  }
+
   var rt = null;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(relayout, 150); }, false);
   window.addEventListener("orientationchange", function () { setTimeout(relayout, 300); }, false);
