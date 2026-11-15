@@ -60,12 +60,20 @@ html[dir=rtl] .info{right:auto;left:16px;}
 
 /* Solitaire */
 #solArea{background:#0f6b35;}
-.pc{position:absolute;border:2px solid #000;border-radius:9px;background:#fff;box-sizing:border-box;overflow:hidden;color:#000;}
-.pc.red{color:#d00000;}
-.pc .r{position:absolute;left:5px;top:3px;font-weight:bold;line-height:1;white-space:nowrap;}
-.pc .m{position:absolute;left:0;right:0;bottom:8%;text-align:center;line-height:1;}
-.pc.down{background:#1f4fbf;border-color:#fff;}
+.pc{position:absolute;border:2px solid #222;border-radius:10px;background:#fffdf7;box-sizing:border-box;overflow:hidden;color:#111;
+  box-shadow:0 1px 3px rgba(0,0,0,0.45);}
+.pc.red{color:#c8102e;}
+.pc .r{position:absolute;left:6px;top:3px;font-weight:bold;line-height:1;white-space:nowrap;letter-spacing:-1px;}
+.pc .pip,.pc .ace{position:absolute;line-height:1;text-align:center;}
+.pc .fc{position:absolute;border:3px solid;border-radius:8px;background:#fff1bf;text-align:center;box-sizing:border-box;overflow:hidden;}
+.pc .fc svg{display:block;margin:0 auto;}
+.pc .fl{display:block;font-weight:bold;line-height:1;}
+.pc.down{background-color:#1f4fbf;border:2px solid #fff;
+  box-shadow:inset 0 0 0 5px #1f4fbf,inset 0 0 0 7px #fff,0 1px 3px rgba(0,0,0,0.45);
+  background-image:-webkit-repeating-linear-gradient(45deg,rgba(255,255,255,0.2) 0px,rgba(255,255,255,0.2) 4px,rgba(255,255,255,0) 4px,rgba(255,255,255,0) 11px);
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.2) 0px,rgba(255,255,255,0.2) 4px,rgba(255,255,255,0) 4px,rgba(255,255,255,0) 11px);}
 .pc.nope{border-color:#ff2a2a;border-width:5px;}
+.solbtn{white-space:nowrap;overflow:hidden;}
 .slot{position:absolute;border:3px dashed #9fd3b1;border-radius:9px;box-sizing:border-box;color:#9fd3b1;text-align:center;font-weight:bold;}
 .solbtn{position:absolute;background:#fff;}
 
@@ -77,11 +85,19 @@ html[dir=rtl] .info{right:auto;left:16px;}
 /* Overlays */
 .ov{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.88);z-index:10;}
 .ov.on{display:block;}
-.ovbox{position:absolute;left:50%;top:50%;width:460px;max-width:90%;margin-left:-230px;
-  background:#fff;border:4px solid #000;border-radius:20px;text-align:center;padding:20px 0 24px;}
-#busybox{margin-top:-60px;font-size:34px;font-weight:bold;padding:34px 0;}
-#wintitle{font-size:44px;font-weight:bold;margin:6px 0;}
-#wintext{font-size:26px;margin:0 0 14px;}
+.ovbox{position:absolute;left:50%;top:50%;width:480px;max-width:92%;
+  -webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%);
+  background:#fff;border:4px solid #000;border-radius:20px;text-align:center;padding:18px 0 22px;}
+#busybox{font-size:34px;font-weight:bold;padding:34px 0;}
+#wintitle{font-size:42px;font-weight:bold;margin:4px 0 8px;}
+#wintext{font-size:24px;margin:0 auto 6px;width:84%;}
+#wintext table{width:100%;border-collapse:collapse;}
+#wintext td{padding:4px 2px;border-bottom:1px solid #ddd;text-align:left;}
+#wintext td.v{text-align:right;font-weight:bold;}
+html[dir=rtl] #wintext td{text-align:right;}
+html[dir=rtl] #wintext td.v{text-align:left;}
+#wintext tr.total td{font-size:30px;border-bottom:none;padding-top:8px;}
+#wintext .rec{color:#167a2a;font-weight:bold;font-size:26px;margin-top:6px;}
 #winbtns button{display:block;width:84%;height:76px;margin:12px auto 0;font-size:28px;}
 </style>
 </head>
@@ -116,13 +132,13 @@ html[dir=rtl] .info{right:auto;left:16px;}
 
 <!-- SUDOKU GAME -->
 <div id="sgame" class="screen">
-  <div class="top"><button class="back" data-t="back" data-go="smenu">Back</button><h1 id="lvlName"></h1></div>
+  <div class="top"><button class="back" data-t="back" data-go="smenu">Back</button><h1 id="lvlName"></h1><div class="info" id="sInfo"></div></div>
   <div class="area" id="sArea" dir="ltr"></div>
 </div>
 
 <!-- SOLITAIRE -->
 <div id="sol" class="screen">
-  <div class="top"><button class="back" data-t="back" data-go="home">Back</button><h1 data-t="solitaire">Solitaire</h1></div>
+  <div class="top"><button class="back" data-t="back" data-go="home">Back</button><h1 data-t="solitaire">Solitaire</h1><div class="info" id="solInfo"></div></div>
   <div class="area" id="solArea" dir="ltr"></div>
 </div>
 
@@ -160,21 +176,30 @@ html[dir=rtl] .info{right:auto;left:16px;}
       undo: "Undo", erase: "Erase", hint: "Help", newg: "New", yes: "Yes", no: "No",
       newConfirm: "Start a new game?", wellDone: "Well done!", solved: "Puzzle solved.", solWon: "All cards are home.",
       next: "Next level", again: "Play again", menu: "Menu",
-      howMany: "How many cards?", cards: "cards", moves: "Moves", allPairs: "All pairs found!" },
+      howMany: "How many cards?", cards: "cards", moves: "Moves", allPairs: "All pairs found!",
+      time: "Time", correct: "Correct numbers", mistakes: "Mistakes", helps: "Help used", score: "Score", best: "Best score",
+      newBest: "New best score!", goodMoves: "Good moves", wrongTaps: "Cards that could not move", pairsFound: "Pairs found", misses: "Wrong guesses",
+      timeBonus: "Time bonus" },
     fr: { title: "Jeux", sudoku: "Sudoku", solitaire: "Solitaire", pairs: "Paires", back: "← Retour",
       "continue": "Continuer ma partie", chooseLevel: "Choisissez un niveau",
       l1: "Très facile", l2: "Facile", l3: "Moyen", l4: "Difficile", l5: "Très difficile",
       undo: "Annuler", erase: "Effacer", hint: "Aide", newg: "Nouveau", yes: "Oui", no: "Non",
       newConfirm: "Commencer une nouvelle partie ?", wellDone: "Bravo !", solved: "Grille terminée.", solWon: "Toutes les cartes sont rangées.",
       next: "Niveau suivant", again: "Rejouer", menu: "Menu",
-      howMany: "Combien de cartes ?", cards: "cartes", moves: "Coups", allPairs: "Toutes les paires trouvées !" },
+      howMany: "Combien de cartes ?", cards: "cartes", moves: "Coups", allPairs: "Toutes les paires trouvées !",
+      time: "Temps", correct: "Chiffres justes", mistakes: "Erreurs", helps: "Aides utilisées", score: "Score", best: "Meilleur score",
+      newBest: "Nouveau record !", goodMoves: "Bons coups", wrongTaps: "Cartes impossibles à jouer", pairsFound: "Paires trouvées", misses: "Mauvais essais",
+      timeBonus: "Bonus de temps" },
     ar: { title: "ألعاب", sudoku: "سودوكو", solitaire: "سوليتير", pairs: "الأزواج", back: "رجوع →",
       "continue": "متابعة اللعبة", chooseLevel: "اختر المستوى",
       l1: "سهل جدا", l2: "سهل", l3: "متوسط", l4: "صعب", l5: "صعب جدا",
       undo: "تراجع", erase: "مسح", hint: "مساعدة", newg: "جديد", yes: "نعم", no: "لا",
       newConfirm: "بدء لعبة جديدة؟", wellDone: "أحسنت!", solved: "اكتملت الشبكة.", solWon: "رتبت كل الأوراق.",
       next: "المستوى التالي", again: "العب مرة أخرى", menu: "القائمة",
-      howMany: "كم عدد البطاقات؟", cards: "بطاقة", moves: "المحاولات", allPairs: "وجدت كل الأزواج!" }
+      howMany: "كم عدد البطاقات؟", cards: "بطاقة", moves: "المحاولات", allPairs: "وجدت كل الأزواج!",
+      time: "الوقت", correct: "أرقام صحيحة", mistakes: "أخطاء", helps: "مساعدات", score: "النقاط", best: "أفضل نتيجة",
+      newBest: "رقم قياسي جديد!", goodMoves: "حركات صحيحة", wrongTaps: "أوراق لا يمكن تحريكها", pairsFound: "أزواج صحيحة", misses: "محاولات خاطئة",
+      timeBonus: "مكافأة الوقت" }
   };
   var lang = "en";
   function t(k) { return (T[lang] && T[lang][k]) || T.en[k] || k; }
@@ -197,6 +222,39 @@ html[dir=rtl] .info{right:auto;left:16px;}
     s.width = Math.round(w) + "px"; s.height = Math.round(h) + "px";
     if (fs) s.fontSize = Math.round(fs) + "px";
   }
+  function fmtTime(sec) {
+    sec = sec || 0;
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    return (h ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (s < 10 ? "0" : "") + s;
+  }
+  var X_MARK = "✖︎", V_MARK = "✔︎";
+
+  // Best scores, kept per game (and per level / size)
+  var BEST = load("dp_best") || {};
+  function recordScore(key, score) {
+    var prev = BEST[key] || 0, isNew = score > prev;
+    if (isNew) { BEST[key] = score; store("dp_best", BEST); }
+    return { best: Math.max(prev, score), isNew: isNew && prev > 0 };
+  }
+  // End-of-game summary: rows = [[label, value], ...]
+  function summaryHtml(rows, score, rec) {
+    function esc(x) { return String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+    var h = "<table>";
+    for (var i = 0; i < rows.length; i++) h += "<tr><td>" + esc(rows[i][0]) + "</td><td class=\"v\">" + esc(rows[i][1]) + "</td></tr>";
+    h += "<tr class=\"total\"><td>" + esc(t("score")) + "</td><td class=\"v\">" + score + "</td></tr>";
+    h += "<tr><td>" + esc(t("best")) + "</td><td class=\"v\">" + rec.best + "</td></tr></table>";
+    if (rec.isNew) h += "<div class=\"rec\">" + esc(t("newBest")) + "</div>";
+    return h;
+  }
+
+  // One clock for all games. It only runs while that game is on screen and the iPad is awake.
+  setInterval(function () {
+    if (document.hidden || $("win").className.indexOf("on") >= 0) return;
+    if (current === "sgame" && S && !S.done) { S.t = (S.t || 0) + 1; sSave(); sInfo(); }
+    else if (current === "sol" && G && !G.won && G.moved) { G.t = (G.t || 0) + 1; store("dp_sol", G); solInfo(); }
+    else if (current === "pgame" && P && !P.over && P.moves) { P.t = (P.t || 0) + 1; pInfo(); }
+  }, 1000);
+
   function areaSize(id) {
     var a = $(id);
     return { W: a.clientWidth || window.innerWidth, H: a.clientHeight || (window.innerHeight - 72) };
@@ -220,9 +278,9 @@ html[dir=rtl] .info{right:auto;left:16px;}
   });
 
   // Dialog with a title, a line of text and big buttons: btns = [[label, fn], ...]
-  function dialog(title, text, btns) {
+  function dialog(title, text, btns, html) {
     $("wintitle").textContent = title;
-    $("wintext").textContent = text;
+    if (html) $("wintext").innerHTML = html; else $("wintext").textContent = text;
     var box = $("winbtns");
     while (box.firstChild) box.removeChild(box.firstChild);
     each(btns, function (b) {
@@ -230,7 +288,6 @@ html[dir=rtl] .info{right:auto;left:16px;}
       tap(el, function () { $("win").className = "ov"; if (b[1]) b[1](); });
       box.appendChild(el);
     });
-    $("winbox").style.marginTop = -(100 + btns.length * 45 + (text ? 20 : 0)) + "px";
     $("win").className = "ov on";
   }
 
@@ -245,7 +302,7 @@ html[dir=rtl] .info{right:auto;left:16px;}
     each(document.querySelectorAll("#langs button"), function (el) {
       el.className = el.getAttribute("data-lang") === l ? "cur" : "";
     });
-    sLabels(); pInfo();
+    sLabels(); pInfo(); solInfo();
   }
 
   /* =====================================================================
@@ -347,6 +404,18 @@ html[dir=rtl] .info{right:auto;left:16px;}
     acts.erase.textContent = t("erase");
     acts.hint.textContent = t("hint");
     $("lvlName").textContent = S ? t("l" + S.lvl) : t("sudoku");
+    sInfo();
+  }
+  function sInfo() {
+    $("sInfo").textContent = S ? fmtTime(S.t) + "  \u00B7  " + X_MARK + " " + (S.bad || 0) : "";
+  }
+  // Sudoku score: points for the level, +5 per correct number, -40 per mistake, -75 per Help,
+  // plus a time bonus when finished faster than the level's target time.
+  var S_BASE = { 1: 500, 2: 800, 3: 1100, 4: 1500, 5: 2000 };
+  var S_TARGET = { 1: 600, 2: 900, 3: 1200, 4: 1800, 5: 2400 };
+  function sScore() {
+    var bonus = Math.max(0, Math.round((S_TARGET[S.lvl] - (S.t || 0)) / 2));
+    return { bonus: bonus, total: Math.max(0, S_BASE[S.lvl] + 5 * (S.ok || 0) - 40 * (S.bad || 0) - 75 * (S.hints || 0) + bonus) };
   }
 
   function sLayout() {
@@ -429,7 +498,11 @@ html[dir=rtl] .info{right:auto;left:16px;}
     if (!S) return;
     S.hl = d;
     var i = S.sel;
-    if (!S.done && i >= 0 && !locked(i) && S.v[i] !== S.s[i]) setCell(i, d);
+    if (!S.done && i >= 0 && !locked(i) && S.v[i] !== S.s[i]) {
+      setCell(i, d);
+      if (d === S.s[i]) S.ok = (S.ok || 0) + 1; else S.bad = (S.bad || 0) + 1;
+      sInfo();
+    }
     sSave(); sRender(); sCheck();
   }
   function sErase() {
@@ -450,6 +523,7 @@ html[dir=rtl] .info{right:auto;left:16px;}
     else for (var i = 0; i < 81; i++) if (S.v[i] !== S.s[i]) { target = i; break; }
     if (target < 0) return;
     S.v[target] = S.s[target]; S.h[target] = 1; S.sel = target; S.hl = S.s[target];
+    S.hints = (S.hints || 0) + 1;
     sSave(); sRender(); sCheck();
   }
   function sCheck() {
@@ -460,14 +534,18 @@ html[dir=rtl] .info{right:auto;left:16px;}
       if (S.lvl < 5) btns.push([t("next") + " → " + t("l" + (S.lvl + 1)), function () { sNew(S.lvl + 1); }]);
       btns.push([t("again"), function () { sNew(S.lvl); }]);
       btns.push([t("menu"), function () { show("smenu"); }]);
-      dialog(t("wellDone"), t("solved"), btns);
+      var sc = sScore(), rec = recordScore("sudoku" + S.lvl, sc.total);
+      dialog(t("wellDone"), "", btns, summaryHtml([
+        [t("time"), fmtTime(S.t)], [t("correct"), S.ok || 0], [t("mistakes"), S.bad || 0],
+        [t("helps"), S.hints || 0], [t("timeBonus"), "+" + sc.bonus]], sc.total, rec));
     }, 500);
   }
   function sNew(level) {
     $("busy").className = "ov on";
     setTimeout(function () {
       var g = generate(level);
-      S = { p: g.p, s: g.s, v: g.p.slice(), h: zeros(81), lvl: level, sel: -1, hl: 0, u: [], done: false };
+      S = { p: g.p, s: g.s, v: g.p.slice(), h: zeros(81), lvl: level, sel: -1, hl: 0, u: [], done: false,
+        t: 0, ok: 0, bad: 0, hints: 0 };
       sSave(); sLabels();
       $("busy").className = "ov";
       show("sgame");
@@ -491,7 +569,35 @@ html[dir=rtl] .info{right:auto;left:16px;}
   function red(c) { var s = su(c); return s === 1 || s === 2; }
   function rkLabel(c) { return (RANK[lang] || RANK.en)[rk(c) - 1]; }
 
-  var G = load("dp_sol");          // {stock, waste, found[4], tab[7]{d,u}, u: undo snapshots}
+  // Pip positions (x, y from 0 to 1 inside the middle of the card) for 2 to 10, like real cards.
+  var PIPS = {
+    2: [[.5, 0], [.5, 1]],
+    3: [[.5, 0], [.5, .5], [.5, 1]],
+    4: [[.2, 0], [.8, 0], [.2, 1], [.8, 1]],
+    5: [[.2, 0], [.8, 0], [.5, .5], [.2, 1], [.8, 1]],
+    6: [[.2, 0], [.8, 0], [.2, .5], [.8, .5], [.2, 1], [.8, 1]],
+    7: [[.2, 0], [.8, 0], [.5, .25], [.2, .5], [.8, .5], [.2, 1], [.8, 1]],
+    8: [[.2, 0], [.8, 0], [.5, .25], [.2, .5], [.8, .5], [.5, .75], [.2, 1], [.8, 1]],
+    9: [[.2, 0], [.8, 0], [.2, 1 / 3], [.8, 1 / 3], [.5, .5], [.2, 2 / 3], [.8, 2 / 3], [.2, 1], [.8, 1]],
+    10: [[.2, 0], [.8, 0], [.5, 1 / 6], [.2, 1 / 3], [.8, 1 / 3], [.2, 2 / 3], [.8, 2 / 3], [.5, 5 / 6], [.2, 1], [.8, 1]]
+  };
+  // Simple drawings for the picture cards: crown (King), jewelled crown (Queen), feathered cap (Jack)
+  var GOLD = 'fill="#e3a400" stroke="#6b4e00" stroke-width="4" stroke-linejoin="round"';
+  var FACE_SVG = {
+    13: '<path d="M6 60 L6 20 L28 40 L50 6 L72 40 L94 20 L94 60 Z" ' + GOLD + '/>' +
+        '<rect x="6" y="52" width="88" height="12" fill="#b8860b" stroke="#6b4e00" stroke-width="3"/>' +
+        '<circle cx="50" cy="7" r="7" fill="#d00000"/><circle cx="6" cy="20" r="6" fill="#1f4fbf"/><circle cx="94" cy="20" r="6" fill="#1f4fbf"/>' +
+        '<circle cx="30" cy="58" r="4" fill="#d00000"/><circle cx="50" cy="58" r="4" fill="#1f8a3a"/><circle cx="70" cy="58" r="4" fill="#d00000"/>',
+    12: '<path d="M8 60 Q12 30 30 42 Q38 16 50 14 Q62 16 70 42 Q88 30 92 60 Z" ' + GOLD + '/>' +
+        '<rect x="8" y="52" width="84" height="12" fill="#b8860b" stroke="#6b4e00" stroke-width="3"/>' +
+        '<circle cx="50" cy="12" r="8" fill="#c2187a"/><circle cx="28" cy="38" r="5" fill="#1f4fbf"/><circle cx="72" cy="38" r="5" fill="#1f4fbf"/>' +
+        '<circle cx="50" cy="58" r="4" fill="#c2187a"/>',
+    11: '<path d="M60 30 Q78 2 97 3 Q88 18 70 36 Z" fill="#1f8a3a" stroke="#0b4d1f" stroke-width="3" stroke-linejoin="round"/>' +
+        '<path d="M8 60 Q10 24 50 22 Q90 24 92 60 Z" fill="#7b2cbf" stroke="#3b0f63" stroke-width="4" stroke-linejoin="round"/>' +
+        '<rect x="8" y="52" width="84" height="12" fill="#e3a400" stroke="#6b4e00" stroke-width="3"/>'
+  };
+
+  var G = load("dp_sol");          // {stock, waste, found[4], tab[7]{d,u}, u: undo snapshots, sc, good, bad, t}
   if (G && !(G.tab && G.tab.length === 7)) G = null;
   var auto = null, nope = null;
 
@@ -502,8 +608,12 @@ html[dir=rtl] .info{right:auto;left:16px;}
       for (var k = 0; k < i; k++) d.push(deck.pop());
       tab.push({ d: d, u: [deck.pop()] });
     }
-    G = { stock: deck, waste: [], found: [[], [], [], []], tab: tab, u: [], won: false };
-    store("dp_sol", G);
+    G = { stock: deck, waste: [], found: [[], [], [], []], tab: tab, u: [], won: false, sc: 0, good: 0, bad: 0, t: 0, moved: false };
+    store("dp_sol", G); solInfo();
+  }
+  function solInfo() {
+    if (!G) return;
+    $("solInfo").textContent = t("score") + " " + Math.max(0, G.sc || 0) + "  \u00B7  " + fmtTime(G.t);
   }
   function snap() {
     G.u.push(JSON.stringify({ stock: G.stock, waste: G.waste, found: G.found, tab: G.tab }));
@@ -517,7 +627,9 @@ html[dir=rtl] .info{right:auto;left:16px;}
     return red(top) !== red(c) && rk(top) === rk(c) + 1;
   }
   function flipTops() {
-    for (var i = 0; i < 7; i++) if (!G.tab[i].u.length && G.tab[i].d.length) G.tab[i].u.push(G.tab[i].d.pop());
+    var n = 0;
+    for (var i = 0; i < 7; i++) if (!G.tab[i].u.length && G.tab[i].d.length) { G.tab[i].u.push(G.tab[i].d.pop()); n++; }
+    return n;
   }
   // Find a tableau column for card c (non-empty columns first). `from` = column it comes from, or -1.
   function findTab(c, from, wholeColumn) {
@@ -527,51 +639,61 @@ html[dir=rtl] .info{right:auto;left:16px;}
     for (i = 0; i < 7; i++) if (i !== from && canTab(c, i)) return i;
     return -1;
   }
-  function after() {
-    flipTops(); store("dp_sol", G); solRender();
+  // Solitaire score: +10 card to its home pile, +5 waste card to the table, +3 move on the table,
+  // +5 each hidden card turned over, -15 card taken back from home, -20 turning the deck over,
+  // -10 Undo, -2 tapping a card that cannot move. Time bonus at the end.
+  function after(points, good) {
+    G.moved = true;
+    G.sc = (G.sc || 0) + points + 5 * flipTops();
+    if (good) G.good = (G.good || 0) + 1;
+    store("dp_sol", G); solInfo(); solRender();
   }
-  function bump(key) { nope = key; solRender(); setTimeout(function () { nope = null; solRender(); }, 450); }
+  function bump(key) {
+    G.bad = (G.bad || 0) + 1; G.sc = (G.sc || 0) - 2; G.moved = true;
+    store("dp_sol", G); solInfo();
+    nope = key; solRender(); setTimeout(function () { nope = null; solRender(); }, 450);
+  }
 
   function tapStock() {
     if (G.won) return;
     snap();
-    if (G.stock.length) G.waste.push(G.stock.pop());
-    else if (G.waste.length) { G.stock = G.waste.reverse(); G.waste = []; }
-    else { G.u.pop(); return; }
-    after();
+    if (G.stock.length) { G.waste.push(G.stock.pop()); return after(0, false); }
+    if (G.waste.length) { G.stock = G.waste.reverse(); G.waste = []; return after(-20, false); }
+    G.u.pop();
   }
   function tapWaste() {
     if (G.won || !G.waste.length) return;
     var c = G.waste[G.waste.length - 1], col;
-    if (canFound(c)) { snap(); G.found[su(c)].push(G.waste.pop()); return after(); }
+    if (canFound(c)) { snap(); G.found[su(c)].push(G.waste.pop()); return after(10, true); }
     col = findTab(c, -1, false);
-    if (col >= 0) { snap(); G.tab[col].u.push(G.waste.pop()); return after(); }
+    if (col >= 0) { snap(); G.tab[col].u.push(G.waste.pop()); return after(5, true); }
     bump("w");
   }
   function tapTab(col, idx) {
     if (G.won) return;
     var tb = G.tab[col], c = tb.u[idx], last = idx === tb.u.length - 1;
-    if (last && canFound(c)) { snap(); G.found[su(c)].push(tb.u.pop()); return after(); }
+    if (last && canFound(c)) { snap(); G.found[su(c)].push(tb.u.pop()); return after(10, true); }
     var dest = findTab(c, col, idx === 0 && !tb.d.length);
     if (dest >= 0) {
       snap();
       var seq = tb.u.splice(idx, tb.u.length - idx);
       G.tab[dest].u = G.tab[dest].u.concat(seq);
-      return after();
+      return after(3, true);
     }
     bump("t" + col + "_" + idx);
   }
   function tapFound(s) {
     if (G.won || !G.found[s].length) return;
     var c = G.found[s][G.found[s].length - 1], dest = findTab(c, -1, false);
-    if (dest >= 0 && G.tab[dest].u.length) { snap(); G.tab[dest].u.push(G.found[s].pop()); return after(); }
+    if (dest >= 0 && G.tab[dest].u.length) { snap(); G.tab[dest].u.push(G.found[s].pop()); return after(-15, true); }
     bump("f" + s);
   }
   function solUndo() {
     if (!G || G.won || !G.u.length) return;
     var s = JSON.parse(G.u.pop());
     G.stock = s.stock; G.waste = s.waste; G.found = s.found; G.tab = s.tab;
-    store("dp_sol", G); solRender();
+    G.sc = (G.sc || 0) - 10;
+    store("dp_sol", G); solInfo(); solRender();
   }
   function solNew() {
     dialog(t("newConfirm"), "", [[t("yes"), function () { stopAuto(); solDeal(); solRender(); }], [t("no"), null]]);
@@ -583,8 +705,12 @@ html[dir=rtl] .info{right:auto;left:16px;}
     for (i = 0; i < 4; i++) n += G.found[i].length;
     if (n === 52) {
       stopAuto(); G.won = true; store("dp_sol", G);
+      var bonus = Math.max(0, Math.round((1800 - (G.t || 0)) / 3));
+      var total = Math.max(0, (G.sc || 0) + bonus), rec = recordScore("sol", total);
       setTimeout(function () {
-        dialog(t("wellDone"), t("solWon"), [[t("again"), function () { solDeal(); solRender(); }], [t("menu"), function () { show("home"); }]]);
+        dialog(t("wellDone"), "", [[t("again"), function () { solDeal(); solRender(); }], [t("menu"), function () { show("home"); }]],
+          summaryHtml([[t("time"), fmtTime(G.t)], [t("goodMoves"), G.good || 0], [t("wrongTaps"), G.bad || 0],
+            [t("timeBonus"), "+" + bonus]], total, rec));
       }, 400);
       return;
     }
@@ -594,7 +720,10 @@ html[dir=rtl] .info{right:auto;left:16px;}
     auto = setInterval(function () {
       for (var k = 0; k < 7; k++) {
         var u = G.tab[k].u;
-        if (u.length && canFound(u[u.length - 1])) { G.found[su(u[u.length - 1])].push(u.pop()); store("dp_sol", G); solRender(); return; }
+        if (u.length && canFound(u[u.length - 1])) {
+          G.found[su(u[u.length - 1])].push(u.pop()); G.sc = (G.sc || 0) + 10;
+          store("dp_sol", G); solInfo(); solRender(); return;
+        }
       }
       stopAuto();
     }, 180);
@@ -602,6 +731,7 @@ html[dir=rtl] .info{right:auto;left:16px;}
 
   function solRender() {
     if (!G) solDeal();
+    solInfo();
     var area = $("solArea");
     while (area.firstChild) area.removeChild(area.firstChild);
     var sz = areaSize("solArea"), W = sz.W, H = sz.H;
@@ -612,19 +742,50 @@ html[dir=rtl] .info{right:auto;left:16px;}
     var x0 = (W - (7 * cw + 6 * gp)) / 2;
     function X(i) { return x0 + i * (cw + gp); }
     var topY = gp, tabY = topY + ch + 2 * gp, bottom = H - gp;
-    var rfs = Math.round(cw * 0.3), mfs = Math.round(cw * 0.55);
+    var rfs = Math.round(cw * 0.32);
 
+    function span(cls, parent, text, fs, x, y, w) {
+      var e = document.createElement("span"); e.className = cls;
+      if (text) e.textContent = text;
+      if (fs) e.style.fontSize = Math.round(fs) + "px";
+      if (x !== undefined) { e.style.left = Math.round(x) + "px"; e.style.top = Math.round(y) + "px"; }
+      if (w) e.style.width = Math.round(w) + "px";
+      parent.appendChild(e);
+      return e;
+    }
+    // The card face: big corner index on top (what shows when cards overlap),
+    // then pips for 2-10, one large suit for the Ace, or a framed picture for J, Q, K.
+    function drawFace(el, c) {
+      var r = rk(c), sym = SUIT[su(c)];
+      span("r", el, rkLabel(c) + sym, rfs);
+      var top = Math.round(ch * 0.38), bot = Math.round(ch * 0.94), left = Math.round(cw * 0.1), right = Math.round(cw * 0.9);
+      var aw = right - left, ah = bot - top;
+      if (r === 1) {
+        var af = Math.min(aw, ah) * 0.95;
+        span("ace", el, sym, af, 0, top + (ah - af) / 2, cw);
+      } else if (r <= 10) {
+        var p = Math.round(Math.min(cw * 0.22, ah / (r >= 9 ? 4.1 : 3.3)));
+        var pos = PIPS[r];
+        for (var i = 0; i < pos.length; i++) {
+          span("pip", el, sym, p, left + pos[i][0] * aw - p / 2, top + pos[i][1] * (ah - p), p);
+        }
+      } else {
+        var fc = document.createElement("div"); fc.className = "fc";
+        fc.style.left = left + "px"; fc.style.top = top + "px";
+        fc.style.width = aw + "px"; fc.style.height = ah + "px";
+        var sw = Math.round(aw * 0.8), sh = Math.round(sw * 0.7);
+        var lf = Math.round(Math.min(aw * 0.42, (ah - sh - 10) * 0.85));
+        fc.innerHTML = '<svg viewBox="0 0 100 70" width="' + sw + '" height="' + sh + '" style="margin-top:' +
+          Math.max(2, Math.round((ah - sh - lf - 6) / 2)) + 'px">' + FACE_SVG[r] + '</svg>';
+        span("fl", fc, rkLabel(c) + sym, lf);
+        el.appendChild(fc);
+      }
+    }
     function card(c, x, y, up, key, fn) {
       var el = document.createElement("div");
       el.className = "pc" + (up ? (red(c) ? " red" : "") : " down") + (key && key === nope ? " nope" : "");
       place(el, x, y, cw, ch);
-      if (up) {
-        var r = document.createElement("span"); r.className = "r"; r.style.fontSize = rfs + "px";
-        r.textContent = rkLabel(c) + SUIT[su(c)];
-        var m = document.createElement("span"); m.className = "m"; m.style.fontSize = mfs + "px";
-        m.textContent = SUIT[su(c)];
-        el.appendChild(r); el.appendChild(m);
-      }
+      if (up) drawFace(el, c);
       if (fn) tap(el, fn);
       area.appendChild(el);
       return el;
@@ -644,7 +805,7 @@ html[dir=rtl] .info{right:auto;left:16px;}
     if (G.waste.length) card(G.waste[G.waste.length - 1], X(1), topY, true, "w", tapWaste);
     else slot(X(1), topY, "");
     // Undo / New in the free spot of the top row
-    var bh = (ch - gp) / 2, bfs = Math.min(26, cw / 4.4);
+    var bh = (ch - gp) / 2, bfs = Math.min(24, cw / 5.4);
     var ub = document.createElement("button"); ub.className = "solbtn"; ub.textContent = t("undo");
     place(ub, X(2), topY, cw, bh, bfs); tap(ub, solUndo); area.appendChild(ub);
     var nb = document.createElement("button"); nb.className = "solbtn"; nb.textContent = t("newg");
@@ -657,10 +818,10 @@ html[dir=rtl] .info{right:auto;left:16px;}
         else slot(X(3 + ss), topY, SUIT[ss]);
       })(s);
     }
-    // Tableau
+    // Tableau: cards spread out as much as the screen allows, so each one is easy to read and tap
     for (var col = 0; col < 7; col++) {
       var tb = G.tab[col], nd = tb.d.length, nu = tb.u.length;
-      var downOff = Math.round(ch * 0.13), upOff = Math.round(ch * 0.3);
+      var downOff = Math.round(ch * 0.14), upOff = Math.round(ch * 0.36);
       var avail = bottom - tabY;
       if (nu > 1 && ch + nd * downOff + (nu - 1) * upOff > avail) {
         upOff = Math.max(10, Math.floor((avail - ch - nd * downOff) / (nu - 1)));
@@ -680,13 +841,17 @@ html[dir=rtl] .info{right:auto;left:16px;}
      PAIRS (memory)
      ===================================================================== */
   // Older emoji only (Unicode 6.0) so they show on old iPads.
-  var SYMBOLS = ["🍎", "🐟", "⭐", "🌙", "☀️", "🚗", "🏠",
-    "🌳", "🐱", "🐶", "⚽", "🎈", "🍌", "🍇", "🐢", "🔑"];
+  var SYMBOLS = ["🍎", "🍌", "🍇", "🍓", "🍒", "🍋", "🍉", "🍍", "🐟", "🐱", "🐶", "🐢", "🐘", "🐴", "🐔",
+    "🐧", "🐰", "🐝", "🐞", "🐸", "🐬", "🌻", "🌷", "🌳", "🌵", "⭐", "🌙", "☀️", "⚽", "🎈", "🚗",
+    "🏠", "🔑", "☂️", "⛵", "✈️", "🚲", "🎁", "🎂", "☕"];
   var P = null, pCards = [];
-  function pInfo() { if (P) $("pMoves").textContent = t("moves") + ": " + P.moves; }
+  function pInfo() {
+    if (P) $("pMoves").textContent = V_MARK + " " + P.ok + "  " + X_MARK + " " + P.bad + "  \u00B7  " + fmtTime(P.t);
+  }
   function pNew(n) {
     var syms = shuffle(SYMBOLS.slice()).slice(0, n / 2);
-    P = { n: n, deck: shuffle(syms.concat(syms)), up: zeros(n), done: zeros(n), first: -1, lock: false, moves: 0 };
+    P = { n: n, deck: shuffle(syms.concat(syms)), up: zeros(n), done: zeros(n), first: -1, lock: false, moves: 0,
+      ok: 0, bad: 0, t: 0, over: false };
     var area = $("pArea");
     while (area.firstChild) area.removeChild(area.firstChild);
     pCards = [];
@@ -722,13 +887,18 @@ html[dir=rtl] .info{right:auto;left:16px;}
     if (P.first < 0) { P.first = i; pRender(); return; }
     var a = P.first; P.first = -1; P.moves++; pInfo();
     if (P.deck[a] === P.deck[i]) {
-      P.done[a] = P.done[i] = 1; P.up[a] = P.up[i] = 0; pRender();
+      P.done[a] = P.done[i] = 1; P.up[a] = P.up[i] = 0; P.ok++; pInfo(); pRender();
       for (var k = 0; k < P.n; k++) if (!P.done[k]) return;
+      P.over = true;
+      // Pairs score: +100 per pair, -15 per wrong guess, time bonus if finished quickly.
+      var bonus = Math.max(0, Math.round((P.n * 10 - P.t) * 2));
+      var total = Math.max(0, 100 * P.ok - 15 * P.bad + bonus), rec = recordScore("pairs" + P.n, total);
       setTimeout(function () {
-        dialog(t("wellDone"), t("allPairs") + " " + t("moves") + ": " + P.moves,
-          [[t("again"), function () { pNew(P.n); }], [t("menu"), function () { show("pmenu"); }]]);
+        dialog(t("wellDone"), "", [[t("again"), function () { pNew(P.n); }], [t("menu"), function () { show("pmenu"); }]],
+          summaryHtml([[t("time"), fmtTime(P.t)], [t("pairsFound"), P.ok], [t("misses"), P.bad], [t("timeBonus"), "+" + bonus]], total, rec));
       }, 500);
     } else {
+      P.bad++; pInfo();
       P.lock = true; pRender();
       setTimeout(function () { P.up[a] = P.up[i] = 0; P.lock = false; pRender(); }, 1500);
     }
