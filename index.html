@@ -25,9 +25,18 @@ button:active{background:#ffd84d;}
 .top h1{margin:0;line-height:69px;text-align:center;font-size:32px;}
 .back{position:absolute;top:9px;left:10px;height:50px;padding:0 18px;font-size:24px;z-index:2;}
 html[dir=rtl] .back{left:auto;right:10px;}
-.info{position:absolute;top:9px;right:16px;line-height:50px;font-size:24px;font-weight:bold;}
+.info{position:absolute;top:9px;right:16px;line-height:50px;font-size:24px;font-weight:bold;direction:ltr;unicode-bidi:embed;}
 html[dir=rtl] .info{right:auto;left:16px;}
 .area{position:absolute;top:72px;left:0;right:0;bottom:0;overflow:hidden;}
+@media (max-width:600px){
+  .top h1{font-size:26px;}
+  .back{font-size:19px;padding:0 10px;height:46px;top:11px;}
+  .top.top2{height:104px;}
+  .top.top2 h1{line-height:66px;padding:0 8px 0 132px;text-align:left;white-space:nowrap;overflow:hidden;font-size:24px;}
+  html[dir=rtl] .top.top2 h1{padding:0 132px 0 8px;text-align:right;}
+  .top.top2 .info{top:auto;bottom:4px;left:0;right:0;line-height:32px;text-align:center;font-size:22px;}
+  .top2 + .area{top:104px;}
+}
 .menu{text-align:center;padding:20px 0 30px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .menu h2{font-size:32px;margin:6px 0 16px;}
 .big{display:block;width:84%;max-width:560px;margin:0 auto 16px;height:92px;font-size:34px;padding:0 20px;}
@@ -132,13 +141,13 @@ html[dir=rtl] #wintext td.v{text-align:left;}
 
 <!-- SUDOKU GAME -->
 <div id="sgame" class="screen">
-  <div class="top"><button class="back" data-t="back" data-go="smenu">Back</button><h1 id="lvlName"></h1><div class="info" id="sInfo"></div></div>
+  <div class="top top2"><button class="back" data-t="back" data-go="smenu">Back</button><h1 id="lvlName"></h1><div class="info" id="sInfo"></div></div>
   <div class="area" id="sArea" dir="ltr"></div>
 </div>
 
 <!-- SOLITAIRE -->
 <div id="sol" class="screen">
-  <div class="top"><button class="back" data-t="back" data-go="home">Back</button><h1 data-t="solitaire">Solitaire</h1><div class="info" id="solInfo"></div></div>
+  <div class="top top2"><button class="back" data-t="back" data-go="home">Back</button><h1 data-t="solitaire">Solitaire</h1><div class="info" id="solInfo"></div></div>
   <div class="area" id="solArea" dir="ltr"></div>
 </div>
 
@@ -155,7 +164,7 @@ html[dir=rtl] #wintext td.v{text-align:left;}
 
 <!-- PAIRS GAME -->
 <div id="pgame" class="screen">
-  <div class="top"><button class="back" data-t="back" data-go="pmenu">Back</button><h1 data-t="pairs">Pairs</h1><div class="info" id="pMoves"></div></div>
+  <div class="top top2"><button class="back" data-t="back" data-go="pmenu">Back</button><h1 data-t="pairs">Pairs</h1><div class="info" id="pMoves"></div></div>
   <div class="area" id="pArea" dir="ltr"></div>
 </div>
 
@@ -420,9 +429,11 @@ html[dir=rtl] #wintext td.v{text-align:left;}
 
   function sLayout() {
     var sz = areaSize("sArea"), W = sz.W, H = sz.H;
-    var g = 12, actH = 80, land = W > H * 1.1;
-    var bw, gp = W > 600 ? 10 : 5, i, x0, y0;
-    if (!land) bw = Math.min(W - 2 * g, (H - actH - 4 * g + 1.15 * 8 * gp / 9) / (1 + 1.15 / 9));
+    var land = W > H * 1.1, narrow = !land && W < 600;
+    var g = narrow ? 10 : 12, actH = narrow ? 66 : 80;
+    var bw, gp = W > 600 ? 10 : 8, i, x0, y0, NH2 = 64;
+    if (narrow) bw = Math.min(W - 2 * g, H - actH - 4 * g - (2 * NH2 + gp));
+    else if (!land) bw = Math.min(W - 2 * g, (H - actH - 4 * g + 1.15 * 8 * gp / 9) / (1 + 1.15 / 9));
     else bw = Math.min(H - 2 * g, W - 3 * g - 2 * gp - 3 * 105);
 
     var B = bw > 500 ? 6 : 4, tl = 2;                 // thick and thin line widths
@@ -430,7 +441,21 @@ html[dir=rtl] #wintext td.v{text-align:left;}
     bw = 9 * c + 4 * B + 6 * tl;
     var boxW = 3 * c + 2 * tl;
 
-    if (!land) {
+    if (narrow) {
+      // Phone: numbers 1-5 on one row and 6-9 on the next, so each button is big enough to tap
+      var nw5 = (bw - 4 * gp) / 5, nh5 = Math.min(nw5, NH2), padH = 2 * nh5 + gp;
+      var total2 = bw + g + padH + g + actH;
+      x0 = (W - bw) / 2; y0 = Math.max(g, (H - total2) / 2);
+      var off2 = (bw - (4 * nw5 + 3 * gp)) / 2;
+      for (i = 0; i < 9; i++) {
+        var rr = i < 5 ? 0 : 1, cc = i < 5 ? i : i - 5;
+        place(nums[i], x0 + (rr ? off2 : 0) + cc * (nw5 + gp), y0 + bw + g + rr * (nh5 + gp), nw5, nh5, nh5 * 0.62);
+      }
+      var awN = (bw - 2 * g) / 3, ayN = y0 + bw + g + padH + g, afsN = Math.min(24, awN / 4.8);
+      place(acts.undo, x0, ayN, awN, actH, afsN);
+      place(acts.erase, x0 + awN + g, ayN, awN, actH, afsN);
+      place(acts.hint, x0 + 2 * (awN + g), ayN, awN, actH, afsN);
+    } else if (!land) {
       var nw = (bw - 8 * gp) / 9, nh = Math.round(nw * 1.15);
       var total = bw + g + nh + g + actH;
       x0 = (W - bw) / 2; y0 = Math.max(g, (H - total) / 2);
@@ -735,14 +760,16 @@ html[dir=rtl] #wintext td.v{text-align:left;}
     var area = $("solArea");
     while (area.firstChild) area.removeChild(area.firstChild);
     var sz = areaSize("solArea"), W = sz.W, H = sz.H;
-    var gp = W > 600 ? 10 : 5;
+    var gp = W > 600 ? 10 : 4;
     var cw = Math.floor((W - 8 * gp) / 7), ch = Math.round(cw * 1.4);
-    var maxCh = Math.floor((H - 4 * gp) / 2.6);
+    var simple = cw < 75;                 // phone-sized cards: bigger corner, one big symbol, buttons below
+    var barH = simple ? 62 : 0;
+    var maxCh = Math.floor((H - 4 * gp - (barH ? barH + gp : 0)) / 2.6);
     if (ch > maxCh) { ch = maxCh; cw = Math.round(ch / 1.4); }
     var x0 = (W - (7 * cw + 6 * gp)) / 2;
     function X(i) { return x0 + i * (cw + gp); }
-    var topY = gp, tabY = topY + ch + 2 * gp, bottom = H - gp;
-    var rfs = Math.round(cw * 0.32);
+    var topY = gp, tabY = topY + ch + 2 * gp, bottom = H - gp - (barH ? barH + gp : 0);
+    var rfs = Math.round(cw * (simple ? 0.42 : 0.32));
 
     function span(cls, parent, text, fs, x, y, w) {
       var e = document.createElement("span"); e.className = cls;
@@ -760,7 +787,13 @@ html[dir=rtl] #wintext td.v{text-align:left;}
       span("r", el, rkLabel(c) + sym, rfs);
       var top = Math.round(ch * 0.38), bot = Math.round(ch * 0.94), left = Math.round(cw * 0.1), right = Math.round(cw * 0.9);
       var aw = right - left, ah = bot - top;
-      if (r === 1) {
+      if (simple && r > 10) {
+        var sw0 = Math.round(aw * 1.0), sh0 = Math.round(sw0 * 0.7);
+        var fe = document.createElement("div"); fe.style.position = "absolute";
+        fe.style.left = left + "px"; fe.style.top = (top + (ah - sh0) / 2) + "px";
+        fe.innerHTML = '<svg viewBox="0 0 100 70" width="' + sw0 + '" height="' + sh0 + '">' + FACE_SVG[r] + '</svg>';
+        el.appendChild(fe);
+      } else if (r === 1 || simple) {
         var af = Math.min(aw, ah) * 0.95;
         span("ace", el, sym, af, 0, top + (ah - af) / 2, cw);
       } else if (r <= 10) {
@@ -805,11 +838,16 @@ html[dir=rtl] #wintext td.v{text-align:left;}
     if (G.waste.length) card(G.waste[G.waste.length - 1], X(1), topY, true, "w", tapWaste);
     else slot(X(1), topY, "");
     // Undo / New in the free spot of the top row
-    var bh = (ch - gp) / 2, bfs = Math.min(24, cw / 5.4);
     var ub = document.createElement("button"); ub.className = "solbtn"; ub.textContent = t("undo");
-    place(ub, X(2), topY, cw, bh, bfs); tap(ub, solUndo); area.appendChild(ub);
     var nb = document.createElement("button"); nb.className = "solbtn"; nb.textContent = t("newg");
-    place(nb, X(2), topY + bh + gp, cw, bh, bfs); tap(nb, solNew); area.appendChild(nb);
+    if (simple) {
+      var bw2 = (W - 3 * 10) / 2, by2 = H - barH - gp;
+      place(ub, 10, by2, bw2, barH, 22); place(nb, 20 + bw2, by2, bw2, barH, 22);
+    } else {
+      var bh = (ch - gp) / 2, bfs = Math.min(24, cw / 5.4);
+      place(ub, X(2), topY, cw, bh, bfs); place(nb, X(2), topY + bh + gp, cw, bh, bfs);
+    }
+    tap(ub, solUndo); area.appendChild(ub); tap(nb, solNew); area.appendChild(nb);
     // Foundations
     for (var s = 0; s < 4; s++) {
       var f = G.found[s];
@@ -821,7 +859,7 @@ html[dir=rtl] #wintext td.v{text-align:left;}
     // Tableau: cards spread out as much as the screen allows, so each one is easy to read and tap
     for (var col = 0; col < 7; col++) {
       var tb = G.tab[col], nd = tb.d.length, nu = tb.u.length;
-      var downOff = Math.round(ch * 0.14), upOff = Math.round(ch * 0.36);
+      var downOff = Math.round(ch * (simple ? 0.16 : 0.14)), upOff = Math.round(ch * (simple ? 0.46 : 0.36));
       var avail = bottom - tabY;
       if (nu > 1 && ch + nd * downOff + (nu - 1) * upOff > avail) {
         upOff = Math.max(10, Math.floor((avail - ch - nd * downOff) / (nu - 1)));
